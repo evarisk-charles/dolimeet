@@ -514,6 +514,12 @@ $arrayofmassactions = [];
 if (!empty($permissiontodelete)) {
     $arrayofmassactions['predelete'] = img_picto('', 'delete', 'class="pictofixedwidth"') . $langs->trans('Delete');
 }
+
+if (!empty($permissiontoadd)) {
+    $arrayofmassactions['pre_sign'] = img_picto('', 'signature', 'class="pictofixedwidth"') . $langs->trans('Sign');
+}
+
+
 if (GETPOST('nomassaction', 'int') || in_array($massaction, ['presend', 'predelete'])) {
     $arrayofmassactions = [];
 }
@@ -562,6 +568,30 @@ $topicmail = 'Send' . $objectType . 'Ref';
 $modelmail = 'document';
 $objecttmp = new Session($db, $objectType);
 $trackid   = 'xxxx' . $object->id;
+
+if ($massaction == 'pre_sign') {
+    $attendantRoles = saturne_fetch_dictionary('c_' . $object->element . '_attendants_role');
+    $signatories    = $signatory->fetchAll('', 'role', 0, 0, ['customsql' => 'status > 0 AND object_type="' . $object->type . '"']);
+    if (is_array($signatories) && !empty($signatories)) {
+        foreach ($signatories as $signatory) {
+            $sessionTrainers[] = $signatory->lastname;
+        }
+    }
+
+
+    if (is_array($attendantRoles) && !empty($attendantRoles)) {
+        foreach ($attendantRoles as $attendantRole) {
+            $refArray[] = $langs->transnoentities($attendantRole->ref);
+
+        }
+    }
+    $formQuestion = [
+        ['type' => 'select', 'name' => 'attendantRoles', 'label' => $langs->transnoentities('Role'), 'values' => $refArray],
+        ['type' => 'select', 'name' => 'signatories', 'label' => $langs->transnoentities('Attendant'), 'values' => $sessionTrainers],
+    ];
+    print $form->formconfirm($_SERVER['PHP_SELF'], $langs->trans('ConfirmMassAddQuestion'), $langs->trans('ConfirmMassAddingQuestion', count($toselect)), 'add_questions', $formQuestion, '', 0, 200, 500, 1);
+}
+
 require_once DOL_DOCUMENT_ROOT . '/core/tpl/massactions_pre.tpl.php';
 
 if ($search_all) {
