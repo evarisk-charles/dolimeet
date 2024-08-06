@@ -570,18 +570,16 @@ $objecttmp = new Session($db, $objectType);
 $trackid   = 'xxxx' . $object->id;
 
 if ($massaction == 'pre_sign') {
-    $attendantRoles = saturne_fetch_dictionary('c_' . $object->element . '_attendants_role');
-    $signatories    = $signatory->fetchAll('', 'role', 0, 0, ['customsql' => 'status > 0 AND object_type="' . $object->type . '"']);
+    $signatories = $signatory->fetchAll('', 'role', 0, 0, ['customsql' => 't.status > 0 AND t.object_type = "' . $object->type . '"' . (GETPOSTISSET('attendantRoles') ? ' AND t.role = "' . GETPOST('attendantRoles') . '"' : '')]);
     if (is_array($signatories) && !empty($signatories)) {
         foreach ($signatories as $signatory) {
             $sessionTrainers[] = $signatory->lastname;
         }
     }
-
-
+    $attendantRoles = saturne_fetch_dictionary('c_' . $object->element . '_attendants_role');
     if (is_array($attendantRoles) && !empty($attendantRoles)) {
         foreach ($attendantRoles as $attendantRole) {
-            $refArray[] = $langs->transnoentities($attendantRole->ref);
+            $refArray[$attendantRole->ref] = $langs->transnoentities($attendantRole->ref);
 
         }
     }

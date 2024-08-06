@@ -22,6 +22,8 @@
  * \brief   JavaScript session file for module DoliMeet
  */
 
+'use strict';
+
 /**
  * Init session JS
  *
@@ -60,6 +62,7 @@ window.dolimeet.session.init = function() {
  */
 window.dolimeet.session.event = function() {
     $(document).on('change', '#fk_soc', window.dolimeet.session.reloadField);
+  $(document).on('change', '#attendantRoles', window.dolimeet.session.reloadFieldMassAction);
 };
 
 /**
@@ -103,6 +106,41 @@ window.dolimeet.session.reloadField = function() {
     success: function(resp) {
       $('.field_fk_project').replaceWith($(resp).find('.field_fk_project'));
       $('.field_fk_contrat').replaceWith($(resp).find('.field_fk_contrat'));
+    },
+    error: function() {}
+  });
+};
+
+/**
+ * Session reload field
+ *
+ * @memberof DoliMeet_Session
+ *
+ * @since   1.5.0
+ * @version 1.5.0
+ *
+ * @returns {void}
+ */
+window.dolimeet.session.reloadFieldMassAction = function() {
+  let form     = document.getElementById('searchFormList');
+  let formData = new FormData(form);
+
+  let token          = window.saturne.toolbox.getToken();
+  let querySeparator = window.saturne.toolbox.getQuerySeparator(document.URL);
+  let field          = $(this).val();
+  formData.set('massaction', 'pre_sign');
+  formData.set('confirmmassaction', 'Confirmer');
+
+  window.saturne.loader.display($('#signatories').closest('.tagtd'));
+
+  $.ajax({
+    url: document.URL + querySeparator + 'attendantRoles=' + field + '&token=' + token,
+    type: 'POST',
+    processData: false,
+    contentType: false,
+    data: formData,
+    success: function(resp) {
+      $('#signatories').closest('.tagtd').replaceWith($(resp).find('#signatories').closest('.tagtd'));
     },
     error: function() {}
   });
